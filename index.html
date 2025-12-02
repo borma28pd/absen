@@ -56,7 +56,7 @@
        </div>
       </div>
       <h1 class="text-2xl font-bold text-gray-900 mb-2">Sistem Absensi MD</h1>
-      <p class="text-gray-600 mb-2">Buatan sandi</p>
+      <p class="text-gray-600 mb-2">Borma Padalarang</p>
       <p class="text-sm text-gray-500">Silakan masukkan data untuk verifikasi</p><!-- WhatsApp Status Indicator -->
       <div class="mt-4 flex items-center justify-center">
        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div><span class="text-xs text-green-600 font-medium">WhatsApp Auto-Report Aktif</span>
@@ -208,13 +208,17 @@
         const KARYAWAN_SHEETS_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${KARYAWAN_SHEET_NAME}`;
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzrrryT_AwtJd9iYLlDimFqidkAJKlnxJzaIu2d5-fZ6ppZpIL6lSR_qDlV5cQj2Png_w/exec';
         
-        // 🌍 WORLD TIME API - Untuk waktu real-time yang tidak bisa dimanipulasi
-        const WORLD_TIME_API = 'https://worldtimeapi.org/api/timezone/Asia/Jakarta';
+        // 🌍 WORLD TIME API - Multiple sources untuk reliability
+        const WORLD_TIME_APIS = [
+            'https://worldtimeapi.org/api/timezone/Asia/Jakarta',
+            'https://timeapi.io/api/Time/current/zone?timeZone=Asia/Jakarta',
+            'http://worldclockapi.com/api/json/wib/now'
+        ];
         
-        // 🕐 SERVER TIME MANAGEMENT - DENGAN PERSISTENT STORAGE
-        let serverTimeOffset = parseInt(localStorage.getItem('serverTimeOffset')) || 0;
-        let serverBaseTime = parseInt(localStorage.getItem('serverBaseTime')) || 0;
-        let deviceBaseTime = parseInt(localStorage.getItem('deviceBaseTime')) || 0;
+        // 🕐 SERVER TIME MANAGEMENT
+        let serverTimestamp = null; // Waktu server actual
+        let localStartTime = null;  // Waktu local saat sync
+        let isServerSynced = false;
         
         // 📱 KONFIGURASI WHATSAPP FONNTE
         const FONNTE_CONFIG = {
@@ -235,7 +239,7 @@
                 console.log(`📱 Sending WhatsApp ${type} notification to:`, FONNTE_CONFIG.target);
                 
                 // Gunakan waktu server untuk WhatsApp notification
-                const now = getCurrentTime();
+                const now = getCurrentServerTime();
                 const tanggal = now.toLocaleDateString('id-ID', {
                     weekday: 'long',
                     year: 'numeric', 
@@ -536,107 +540,85 @@ _Sistem Absensi MD - Borma Padalarang_`;
             }
         }
 
-        // 🌍 FUNGSI UNTUK MENDAPATKAN WAKTU REAL-TIME DARI SERVER
-        async function getServerTime() {
-            try {
-                console.log('🌍 Mengambil waktu real-time dari World Time API...');
-                
-                const response = await fetch(WORLD_TIME_API, {
-                    method: 'GET',
-                    cache: 'no-cache',
-                    headers: {
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache'
+        // 🌍 FUNGSI UNTUK MENDAPATKAN WAKTU SERVER (ROBUST)
+        async function syncServerTime() {
+            console.log('🌍 Sinkronisasi waktu server...');
+            
+            // Try multiple APIs
+            for (const api of WORLD_TIME_APIS) {
+                try {
+                    const response = await fetch(api, {
+                        method: 'GET',
+                        cache: 'no-cache',
+                        headers: {
+                            'Cache-Control': 'no-cache, no-store, must-revalidate',
+                            'Pragma': 'no-cache'
+                        }
+                    });
+                    
+                    if (!response.ok) continue;
+                    
+                    const data = await response.json();
+                    let serverTime;
+                    
+                    // Parse different API formats
+                    if (data.datetime) {
+                        serverTime = new Date(data.datetime);
+                    } else if (data.dateTime) {
+                        serverTime = new Date(data.dateTime);
+                    } else if (data.currentDateTime) {
+                        serverTime = new Date(data.currentDateTime);
+                    } else {
+                        continue;
                     }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to fetch server time');
+                    
+                    // Simpan timestamp server dan waktu local
+                    serverTimestamp = serverTime.getTime();
+                    localStartTime = performance.now();
+                    isServerSynced = true;
+                    
+                    console.log('✅ Server time synced successfully');
+                    console.log('📅 Server time:', serverTime.toLocaleString('id-ID'));
+                    console.log('⏱️ Performance.now:', localStartTime);
+                    
+                    return serverTime;
+                    
+                } catch (error) {
+                    console.log(`⚠️ Failed to fetch from ${api}:`, error.message);
+                    continue;
                 }
-                
-                const data = await response.json();
-                const serverTime = new Date(data.datetime);
-                const deviceTime = new Date();
-                
-                // Simpan base time untuk kalkulasi
-                serverBaseTime = serverTime.getTime();
-                deviceBaseTime = deviceTime.getTime();
-                serverTimeOffset = serverBaseTime - deviceBaseTime;
-                
-                // Simpan ke localStorage
-                localStorage.setItem('serverBaseTime', serverBaseTime.toString());
-                localStorage.setItem('deviceBaseTime', deviceBaseTime.toString());
-                localStorage.setItem('serverTimeOffset', serverTimeOffset.toString());
-                localStorage.setItem('lastServerSync', Date.now().toString());
-                
-                console.log('✅ Server time synchronized and saved');
-                console.log('📅 Server time:', serverTime.toLocaleString('id-ID'));
-                console.log('📱 Device time:', deviceTime.toLocaleString('id-ID'));
-                console.log('⏱️ Time offset:', Math.round(serverTimeOffset / 1000), 'seconds');
-                
-                return serverTime;
-                
-            } catch (error) {
-                console.error('❌ Error getting server time:', error);
-                console.log('⚠️ Using saved offset or fallback');
+            }
+            
+            // Fallback: gunakan waktu lokal
+            console.error('❌ Semua API gagal, menggunakan waktu lokal');
+            serverTimestamp = Date.now();
+            localStartTime = performance.now();
+            isServerSynced = false;
+            
+            return new Date(serverTimestamp);
+        }
+        
+        // 🕐 FUNGSI GET WAKTU SAAT INI (ANTI-MANIPULASI)
+        function getCurrentServerTime() {
+            if (!serverTimestamp || !localStartTime) {
+                console.warn('⚠️ Server time not synced yet, using local time');
                 return new Date();
             }
+            
+            // Hitung elapsed time menggunakan performance.now() yang tidak bisa dimanipulasi
+            const elapsedMs = performance.now() - localStartTime;
+            const currentServerTime = serverTimestamp + elapsedMs;
+            
+            return new Date(currentServerTime);
         }
         
-        // 🕐 FUNGSI UNTUK MENDAPATKAN WAKTU SAAT INI (DARI SERVER)
-        function getCurrentTime() {
-            // Jika ada offset tersimpan, gunakan untuk kalkulasi
-            if (serverTimeOffset !== 0 && serverBaseTime !== 0) {
-                const deviceNow = Date.now();
-                const elapsedTime = deviceNow - deviceBaseTime;
-                const serverNow = serverBaseTime + elapsedTime;
-                
-                return new Date(serverNow);
-            }
-            
-            // Fallback ke device time
-            console.log('⚠️ No server sync, using device time');
-            return new Date();
-        }
-        
-        // 🔄 AUTO SYNC SERVER TIME
-        async function autoSyncServerTime() {
-            const lastSync = parseInt(localStorage.getItem('lastServerSync')) || 0;
-            const now = Date.now();
-            
-            // Sync jika belum pernah atau sudah lebih dari 5 menit
-            if (lastSync === 0 || (now - lastSync) > (5 * 60 * 1000)) {
-                console.log('🔄 Syncing server time...');
-                await getServerTime();
-            } else {
-                console.log('✅ Using cached server time offset');
-            }
-            
-            // Auto sync setiap 5 menit
+        // 🔄 AUTO RE-SYNC (Optional, untuk akurasi jangka panjang)
+        async function startAutoSync() {
+            // Re-sync setiap 10 menit untuk menghindari drift
             setInterval(async () => {
-                console.log('🔄 Auto-syncing server time...');
-                await getServerTime();
-            }, 5 * 60 * 1000);
-        }
-        
-        // 🛡️ VALIDASI MANIPULASI WAKTU
-        function detectTimeManipulation() {
-            if (deviceBaseTime === 0) return false;
-            
-            const deviceNow = Date.now();
-            const expectedElapsed = deviceNow - deviceBaseTime;
-            
-            // Jika elapsed time negatif atau terlalu besar, kemungkinan ada manipulasi
-            if (expectedElapsed < 0 || expectedElapsed > (24 * 60 * 60 * 1000)) {
-                console.warn('⚠️ Possible time manipulation detected!');
-                console.log('   Re-syncing with server...');
-                
-                // Re-sync dengan server
-                getServerTime();
-                return true;
-            }
-            
-            return false;
+                console.log('🔄 Auto re-syncing server time...');
+                await syncServerTime();
+            }, 10 * 60 * 1000); // 10 menit
         }
 
         // Session Management
@@ -723,7 +705,7 @@ _Sistem Absensi MD - Borma Padalarang_`;
         // Work Duration Tracking
         async function startWorkDurationTracking() {
             // Gunakan waktu server untuk login
-            currentLoginTime = getCurrentTime();
+            currentLoginTime = getCurrentServerTime();
             
             console.log('⏰ Memulai tracking waktu kerja');
             console.log('📅 Login time (server):', currentLoginTime.toLocaleString('id-ID'));
@@ -739,11 +721,8 @@ _Sistem Absensi MD - Borma Padalarang_`;
         function updateWorkDuration() {
             if (!currentLoginTime) return;
             
-            // Deteksi manipulasi waktu
-            detectTimeManipulation();
-            
-            // Gunakan waktu server untuk menghitung durasi
-            const now = getCurrentTime();
+            // Gunakan waktu server untuk menghitung durasi (ANTI-MANIPULASI)
+            const now = getCurrentServerTime();
             const duration = now - currentLoginTime;
             
             const hours = Math.floor(duration / (1000 * 60 * 60));
@@ -791,7 +770,7 @@ _Sistem Absensi MD - Borma Padalarang_`;
                 console.log('⏰ Menghentikan tracking waktu kerja');
                 
                 // Gunakan waktu server untuk logout
-                const now = getCurrentTime();
+                const now = getCurrentServerTime();
                 const workDuration = now - currentLoginTime;
                 const durationText = formatDuration(workDuration);
                 
@@ -950,7 +929,7 @@ _Sistem Absensi MD - Borma Padalarang_`;
                 console.log(`🔄 Menyimpan absensi ${type}...`);
                 
                 // Gunakan waktu server untuk absensi
-                const now = getCurrentTime();
+                const now = getCurrentServerTime();
                 const durasi = workDuration || (currentLoginTime && type === 'logout' ? 
                     formatDuration(now - currentLoginTime) : '-');
                 
@@ -1006,7 +985,7 @@ _Sistem Absensi MD - Borma Padalarang_`;
             
             try {
                 // Gunakan waktu server untuk dokumentasi
-                const now = getCurrentTime();
+                const now = getCurrentServerTime();
                 
                 const params = new URLSearchParams();
                 params.append('action', 'saveDokumentasi');
@@ -1124,9 +1103,12 @@ _Sistem Absensi MD - Borma Padalarang_`;
         window.addEventListener('load', async function() {
             console.log('🚀 Halaman dimuat...');
             
-            // Sinkronisasi waktu server terlebih dahulu
+            // Sinkronisasi waktu server terlebih dahulu (PRIORITAS #1)
             console.log('🌍 Inisialisasi sinkronisasi waktu server...');
-            await autoSyncServerTime();
+            await syncServerTime();
+            
+            // Start auto-sync untuk jangka panjang
+            startAutoSync();
             
             if (restoreKaryawanSession()) {
                 console.log('✅ Karyawan session restored');
@@ -1201,7 +1183,7 @@ _Sistem Absensi MD - Borma Padalarang_`;
             
             if (currentKaryawan && currentLoginTime) {
                 // Gunakan waktu server untuk logout
-                const now = getCurrentTime();
+                const now = getCurrentServerTime();
                 const workDuration = now - currentLoginTime;
                 const durationText = formatDuration(workDuration);
                 
@@ -1293,7 +1275,7 @@ _Sistem Absensi MD - Borma Padalarang_`;
                 }
                 
                 // Gunakan waktu server untuk dokumentasi
-                const now = getCurrentTime();
+                const now = getCurrentServerTime();
                 
                 const dokumentasiData = {
                     nama: currentKaryawan.nama,
@@ -1410,5 +1392,5 @@ _Sistem Absensi MD - Borma Padalarang_`;
         window.toggleJobdesk = toggleJobdesk;
         window.openDokumentasiModal = openDokumentasiModal;
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a77993b85cdfd22',t:'MTc2NDY0NDY4NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a77ad9604325e3c',t:'MTc2NDY0NTUxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
