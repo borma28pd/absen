@@ -3,7 +3,7 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Absensi MD - Buatan sandi</title>
+  <title>Sistem Absensi MD - Borma Padalarang</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
         body {
@@ -60,6 +60,9 @@
       <p class="text-sm text-gray-500">Silakan masukkan data untuk verifikasi</p><!-- WhatsApp Status Indicator -->
       <div class="mt-4 flex items-center justify-center">
        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div><span class="text-xs text-green-600 font-medium">WhatsApp Auto-Report Aktif</span>
+      </div><!-- Server Time Status -->
+      <div class="mt-2 flex items-center justify-center">
+       <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-2"></div><span class="text-xs text-blue-600 font-medium">Server Time Synchronized</span>
       </div>
      </div>
      <form id="absenForm" class="space-y-6">
@@ -208,9 +211,10 @@
         // 🌍 WORLD TIME API - Untuk waktu real-time yang tidak bisa dimanipulasi
         const WORLD_TIME_API = 'https://worldtimeapi.org/api/timezone/Asia/Jakarta';
         
-        // 🕐 SERVER TIME MANAGEMENT
-        let serverTimeOffset = 0; // Selisih antara waktu server dan device
-        let lastServerSync = null; // Waktu terakhir sync dengan server
+        // 🕐 SERVER TIME MANAGEMENT - DENGAN PERSISTENT STORAGE
+        let serverTimeOffset = parseInt(localStorage.getItem('serverTimeOffset')) || 0;
+        let serverBaseTime = parseInt(localStorage.getItem('serverBaseTime')) || 0;
+        let deviceBaseTime = parseInt(localStorage.getItem('deviceBaseTime')) || 0;
         
         // 📱 KONFIGURASI WHATSAPP FONNTE
         const FONNTE_CONFIG = {
@@ -219,8 +223,6 @@
             enabled: true,
             apiUrl: 'https://api.fonnte.com/send'
         };
-
-        // Session lock DISABLED - sistem login normal tanpa pembatasan device
 
         // 📱 FUNGSI WHATSAPP AUTO-REPORT
         async function sendWhatsAppNotification(type, data) {
@@ -541,7 +543,11 @@ _Sistem Absensi MD - Borma Padalarang_`;
                 
                 const response = await fetch(WORLD_TIME_API, {
                     method: 'GET',
-                    cache: 'no-cache'
+                    cache: 'no-cache',
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache'
+                    }
                 });
                 
                 if (!response.ok) {
@@ -552,11 +558,18 @@ _Sistem Absensi MD - Borma Padalarang_`;
                 const serverTime = new Date(data.datetime);
                 const deviceTime = new Date();
                 
-                // Hitung offset antara server time dan device time
-                serverTimeOffset = serverTime.getTime() - deviceTime.getTime();
-                lastServerSync = deviceTime.getTime();
+                // Simpan base time untuk kalkulasi
+                serverBaseTime = serverTime.getTime();
+                deviceBaseTime = deviceTime.getTime();
+                serverTimeOffset = serverBaseTime - deviceBaseTime;
                 
-                console.log('✅ Server time synchronized');
+                // Simpan ke localStorage
+                localStorage.setItem('serverBaseTime', serverBaseTime.toString());
+                localStorage.setItem('deviceBaseTime', deviceBaseTime.toString());
+                localStorage.setItem('serverTimeOffset', serverTimeOffset.toString());
+                localStorage.setItem('lastServerSync', Date.now().toString());
+                
+                console.log('✅ Server time synchronized and saved');
                 console.log('📅 Server time:', serverTime.toLocaleString('id-ID'));
                 console.log('📱 Device time:', deviceTime.toLocaleString('id-ID'));
                 console.log('⏱️ Time offset:', Math.round(serverTimeOffset / 1000), 'seconds');
@@ -565,38 +578,66 @@ _Sistem Absensi MD - Borma Padalarang_`;
                 
             } catch (error) {
                 console.error('❌ Error getting server time:', error);
-                // Fallback ke waktu device jika gagal
-                console.log('⚠️ Using device time as fallback');
-                serverTimeOffset = 0;
+                console.log('⚠️ Using saved offset or fallback');
                 return new Date();
             }
         }
         
         // 🕐 FUNGSI UNTUK MENDAPATKAN WAKTU SAAT INI (DARI SERVER)
         function getCurrentTime() {
-            // Jika sudah pernah sync, gunakan offset untuk menghitung waktu server
-            if (lastServerSync !== null) {
-                const deviceNow = new Date();
-                const serverNow = new Date(deviceNow.getTime() + serverTimeOffset);
-                return serverNow;
+            // Jika ada offset tersimpan, gunakan untuk kalkulasi
+            if (serverTimeOffset !== 0 && serverBaseTime !== 0) {
+                const deviceNow = Date.now();
+                const elapsedTime = deviceNow - deviceBaseTime;
+                const serverNow = serverBaseTime + elapsedTime;
+                
+                return new Date(serverNow);
             }
             
-            // Jika belum pernah sync, gunakan waktu device
+            // Fallback ke device time
+            console.log('⚠️ No server sync, using device time');
             return new Date();
         }
         
-        // 🔄 AUTO SYNC SERVER TIME SETIAP 5 MENIT
+        // 🔄 AUTO SYNC SERVER TIME
         async function autoSyncServerTime() {
-            await getServerTime();
+            const lastSync = parseInt(localStorage.getItem('lastServerSync')) || 0;
+            const now = Date.now();
             
-            // Sync ulang setiap 5 menit
+            // Sync jika belum pernah atau sudah lebih dari 5 menit
+            if (lastSync === 0 || (now - lastSync) > (5 * 60 * 1000)) {
+                console.log('🔄 Syncing server time...');
+                await getServerTime();
+            } else {
+                console.log('✅ Using cached server time offset');
+            }
+            
+            // Auto sync setiap 5 menit
             setInterval(async () => {
                 console.log('🔄 Auto-syncing server time...');
                 await getServerTime();
-            }, 5 * 60 * 1000); // 5 menit
+            }, 5 * 60 * 1000);
         }
-
-        // Session lock functions REMOVED - login tanpa pembatasan device
+        
+        // 🛡️ VALIDASI MANIPULASI WAKTU
+        function detectTimeManipulation() {
+            if (deviceBaseTime === 0) return false;
+            
+            const deviceNow = Date.now();
+            const expectedElapsed = deviceNow - deviceBaseTime;
+            
+            // Jika elapsed time negatif atau terlalu besar, kemungkinan ada manipulasi
+            if (expectedElapsed < 0 || expectedElapsed > (24 * 60 * 60 * 1000)) {
+                console.warn('⚠️ Possible time manipulation detected!');
+                console.log('   Re-syncing with server...');
+                
+                // Re-sync dengan server
+                getServerTime();
+                return true;
+            }
+            
+            return false;
+        }
 
         // Session Management
         function saveKaryawanSession() {
@@ -612,6 +653,12 @@ _Sistem Absensi MD - Borma Padalarang_`;
             localStorage.removeItem(SESSION_KEYS.KARYAWAN_SESSION);
             localStorage.removeItem(SESSION_KEYS.KARYAWAN_DATA);
             localStorage.removeItem(SESSION_KEYS.LOGIN_TIME);
+            
+            // JANGAN hapus server time offset agar tetap akurat
+            // localStorage.removeItem('serverTimeOffset');
+            // localStorage.removeItem('serverBaseTime');
+            // localStorage.removeItem('deviceBaseTime');
+            
             console.log('🗑️ Karyawan session cleared');
         }
         
@@ -691,6 +738,9 @@ _Sistem Absensi MD - Borma Padalarang_`;
         
         function updateWorkDuration() {
             if (!currentLoginTime) return;
+            
+            // Deteksi manipulasi waktu
+            detectTimeManipulation();
             
             // Gunakan waktu server untuk menghitung durasi
             const now = getCurrentTime();
@@ -1090,7 +1140,7 @@ _Sistem Absensi MD - Borma Padalarang_`;
             await loadKaryawanDataFromSheets();
         });
 
-        // FORM SUBMIT - DENGAN SESSION LOCK YANG DIPERBAIKI
+        // FORM SUBMIT
         absenForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -1360,5 +1410,5 @@ _Sistem Absensi MD - Borma Padalarang_`;
         window.toggleJobdesk = toggleJobdesk;
         window.openDokumentasiModal = openDokumentasiModal;
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a774a3735b4ce39',t:'MTc2NDY0MTQ0Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a77993b85cdfd22',t:'MTc2NDY0NDY4NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
