@@ -3,7 +3,7 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Absensi MD - Borma Padalarang</title>
+  <title>Sistem Absensi MD - Buatan sandi</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
         body {
@@ -49,12 +49,14 @@
    <div id="loginPage" class="min-h-full flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md fade-in">
      <div class="text-center mb-8">
-      <div class="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-       <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-       </svg>
+      <div class="mx-auto mb-6"><img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/Logo_Borma_Toserba.jpg" alt="Logo Borma Toserba" class="mx-auto h-20 w-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+       <div class="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto" style="display:none;">
+        <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+       </div>
       </div>
       <h1 class="text-2xl font-bold text-gray-900 mb-2">Sistem Absensi MD</h1>
-      <p class="text-gray-600 mb-2">Borma Padalarang</p>
+      <p class="text-gray-600 mb-2">Buatan sandi</p>
       <p class="text-sm text-gray-500">Silakan masukkan data untuk verifikasi</p><!-- WhatsApp Status Indicator -->
       <div class="mt-4 flex items-center justify-center">
        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div><span class="text-xs text-green-600 font-medium">WhatsApp Auto-Report Aktif</span>
@@ -82,9 +84,11 @@
      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center py-4">
        <div class="flex items-center">
-        <div class="bg-indigo-100 w-10 h-10 rounded-full flex items-center justify-center mr-3">
-         <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-         </svg>
+        <div class="mr-4"><img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/Logo_Borma_Toserba.jpg" alt="Logo Borma Toserba" class="h-12 w-auto object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+         <div class="bg-indigo-100 w-10 h-10 rounded-full flex items-center justify-center" style="display:none;">
+          <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+          </svg>
+         </div>
         </div>
         <div>
          <h1 class="text-xl font-semibold text-gray-900" id="welcomeText">Selamat Datang</h1>
@@ -192,27 +196,33 @@
    </div>
   </div>
   <script>
-        // 🔧 KONFIGURASI SISTEM - SESUAI PERMINTAAN ANDA
+        // 🔧 KONFIGURASI SISTEM
         const SPREADSHEET_ID = '1PsJV6_uNKkgsyFA2yikHZ4o3fmF0RiaXcZHELeSwh3U';
-        const KARYAWAN_SHEET_NAME = 'Karyawan'; // Sheet untuk data karyawan
-        const ABSENSI_SHEET_NAME = 'Absensi';   // Sheet untuk data absensi
-        const DOKUMENTASI_SHEET_NAME = 'Dokumentasi'; // Sheet untuk dokumentasi
+        const KARYAWAN_SHEET_NAME = 'Karyawan';
+        const ABSENSI_SHEET_NAME = 'Absensi';
+        const DOKUMENTASI_SHEET_NAME = 'Dokumentasi';
         
-        // URL untuk mengambil data karyawan dari Google Sheets
         const KARYAWAN_SHEETS_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${KARYAWAN_SHEET_NAME}`;
-        
-        // Apps Script URL - DIPERBAIKI SESUAI YANG BEKERJA
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzrrryT_AwtJd9iYLlDimFqidkAJKlnxJzaIu2d5-fZ6ppZpIL6lSR_qDlV5cQj2Png_w/exec';
         
-        // 📱 KONFIGURASI WHATSAPP FONNTE - ID GRUP YANG BENAR
+        // 🌍 WORLD TIME API - Untuk waktu real-time yang tidak bisa dimanipulasi
+        const WORLD_TIME_API = 'https://worldtimeapi.org/api/timezone/Asia/Jakarta';
+        
+        // 🕐 SERVER TIME MANAGEMENT
+        let serverTimeOffset = 0; // Selisih antara waktu server dan device
+        let lastServerSync = null; // Waktu terakhir sync dengan server
+        
+        // 📱 KONFIGURASI WHATSAPP FONNTE
         const FONNTE_CONFIG = {
-            token: 'C9BxKbVQyGzp5JRxG1re',                    // Token Fonnte Anda
-            target: '120363422961733756@g.us',          // ID Target WhatsApp Group LENGKAP
-            enabled: true,                                     // Set false untuk disable notifikasi WA
+            token: 'hPehvRvjs8c8AuK5Y8az',
+            target: '120363422961733756@g.us',
+            enabled: true,
             apiUrl: 'https://api.fonnte.com/send'
         };
 
-        // 📱 FUNGSI WHATSAPP AUTO-REPORT - HANYA TEKS (TANPA FOTO)
+        // Session lock DISABLED - sistem login normal tanpa pembatasan device
+
+        // 📱 FUNGSI WHATSAPP AUTO-REPORT
         async function sendWhatsAppNotification(type, data) {
             if (!FONNTE_CONFIG.enabled || !FONNTE_CONFIG.token) {
                 console.log('📱 WhatsApp notification disabled or not configured');
@@ -222,7 +232,8 @@
             try {
                 console.log(`📱 Sending WhatsApp ${type} notification to:`, FONNTE_CONFIG.target);
                 
-                const now = new Date();
+                // Gunakan waktu server untuk WhatsApp notification
+                const now = getCurrentTime();
                 const tanggal = now.toLocaleDateString('id-ID', {
                     weekday: 'long',
                     year: 'numeric', 
@@ -250,14 +261,10 @@ _Sistem Absensi MD - Borma Padalarang_`;
 📅 *Tanggal:* ${tanggal}
 ⏰ *Jam Keluar:* ${jam}
 ⏱️ *MD bekerja dengan durasi:* ${data.durasi || '00:00:00'}
-Lihat Dokumentasi : https://drive.google.com/drive/folders/1h443D8ivZTvcFJ9_4ltH-WU59MF4--Ec?usp=sharing
 
 _Sistem Absensi MD - Borma Padalarang_`;
                 }
 
-                console.log('📱 Message to send:', message);
-
-                // KIRIM PESAN TEKS
                 const textParams = new URLSearchParams();
                 textParams.append('target', FONNTE_CONFIG.target);
                 textParams.append('message', message);
@@ -272,8 +279,6 @@ _Sistem Absensi MD - Borma Padalarang_`;
                     body: textParams.toString()
                 });
 
-                console.log('📱 Text message response status:', textResponse.status);
-                
                 let textSuccess = false;
                 if (textResponse.ok) {
                     const textResult = await textResponse.json();
@@ -287,179 +292,128 @@ _Sistem Absensi MD - Borma Padalarang_`;
                     return true;
                 } else {
                     console.log('⚠️ WhatsApp API error');
-                    showError(`📱 WhatsApp error: Failed to send`);
                     return false;
                 }
 
             } catch (error) {
                 console.error('❌ WhatsApp notification error:', error);
-                showError(`📱 WhatsApp error: ${error.message}`);
                 return false;
             }
         }
 
-        // 📁 FUNGSI UNTUK UPLOAD FOTO KE GOOGLE DRIVE - DIPERBAIKI TOTAL
+        // 📁 FUNGSI UPLOAD FOTO KE GOOGLE DRIVE - DENGAN LOGGING LENGKAP
         async function uploadPhotoToGoogleDrive(base64Image, filename, metadata) {
             try {
-                console.log('📁 [UPLOAD] Starting photo upload to Google Drive...');
-                console.log('📁 [UPLOAD] Original filename:', filename);
-                console.log('📁 [UPLOAD] Metadata:', metadata);
+                console.log('📁 ========== MULAI UPLOAD FOTO ==========');
+                console.log('📁 Filename:', filename);
+                console.log('📁 Metadata:', metadata);
                 
-                // Validasi format base64
                 if (!base64Image || !base64Image.startsWith('data:image/')) {
-                    console.error('❌ [UPLOAD] Invalid base64 format:', base64Image ? base64Image.substring(0, 50) : 'null');
+                    console.error('❌ Invalid base64 format');
                     return false;
                 }
 
-                // Extract MIME type dan base64 data
                 const mimeType = base64Image.split(';')[0].split(':')[1];
                 const base64Data = base64Image.split(',')[1];
                 
-                // PERBAIKI FILENAME - Hapus karakter yang bermasalah
-                const cleanFilename = filename
-                    .replace(/[^a-zA-Z0-9._-]/g, '_')  // Ganti karakter khusus dengan underscore
-                    .replace(/\s+/g, '_')              // Ganti spasi dengan underscore
-                    .replace(/_{2,}/g, '_')            // Ganti multiple underscore dengan single
-                    .substring(0, 100);                // Batasi panjang filename
+                console.log('📁 MIME Type:', mimeType);
+                console.log('📁 Base64 data length:', base64Data.length);
                 
-                console.log('📁 [UPLOAD] Cleaned filename:', cleanFilename);
-                console.log('📁 [UPLOAD] Detected MIME type:', mimeType);
-                console.log('📁 [UPLOAD] Base64 data length:', base64Data.length);
+                const cleanFilename = filename
+                    .replace(/[^a-zA-Z0-9._-]/g, '_')
+                    .replace(/\s+/g, '_')
+                    .replace(/_{2,}/g, '_')
+                    .substring(0, 100);
+                
+                console.log('📁 Cleaned filename:', cleanFilename);
                 
                 const fileSizeKB = Math.round(base64Data.length * 0.75 / 1024);
-                console.log('📁 [UPLOAD] Estimated file size:', fileSizeKB, 'KB');
+                console.log('📁 Estimated file size:', fileSizeKB, 'KB');
 
-                // Validasi ukuran file (max 5MB untuk Google Drive API)
-                if (fileSizeKB > 5120) { // 5MB limit
-                    console.error('❌ [UPLOAD] File too large:', fileSizeKB, 'KB');
+                if (fileSizeKB > 5120) {
+                    console.error('❌ File too large:', fileSizeKB, 'KB');
                     showError('Foto terlalu besar! Maksimal 5MB');
                     return false;
                 }
 
-                // METHOD 1: POST Request dengan JSON Body (PRIORITAS UTAMA)
+                // METODE 1: POST dengan FormData
+                console.log('📁 Mencoba upload dengan POST FormData...');
+                const formData = new FormData();
+                formData.append('action', 'uploadPhoto');
+                formData.append('filename', cleanFilename);
+                formData.append('mimeType', mimeType);
+                formData.append('base64Data', base64Data);
+                formData.append('nama', metadata.nama);
+                formData.append('branch', metadata.branch);
+                formData.append('jobdesk', metadata.jobdesk);
+                formData.append('type', metadata.type);
+                formData.append('lokasi', metadata.lokasi);
+                formData.append('tanggal', metadata.tanggal);
+                formData.append('jam', metadata.jam);
+                formData.append('timestamp', new Date().toISOString());
+                
                 try {
-                    console.log('📁 [UPLOAD] Trying POST JSON method...');
-                    
-                    const uploadPayload = {
-                        action: 'uploadPhoto',
-                        filename: cleanFilename,
-                        mimeType: mimeType,
-                        base64Data: base64Data,
-                        metadata: JSON.stringify(metadata),
-                        timestamp: new Date().toISOString(),
-                        source: 'dokumentasi-md-json'
-                    };
-
-                    const postResponse = await fetch(APPS_SCRIPT_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(uploadPayload),
-                        mode: 'cors'
-                    });
-
-                    console.log('📁 [UPLOAD] POST JSON Response status:', postResponse.status);
-
-                    if (postResponse.ok) {
-                        const result = await postResponse.json();
-                        console.log('📁 [UPLOAD] POST JSON Success response:', result);
-                        
-                        if (result.status === 'success') {
-                            console.log('✅ [UPLOAD] Photo uploaded successfully via POST JSON');
-                            showSuccess('📁 Foto berhasil disimpan ke Google Drive!');
-                            return true;
-                        }
-                    }
-                } catch (postError) {
-                    console.log('📁 [UPLOAD] POST JSON method failed:', postError.message);
-                }
-
-                // METHOD 2: POST Request dengan FormData
-                try {
-                    console.log('📁 [UPLOAD] Trying POST FormData method...');
-                    
-                    const formData = new FormData();
-                    formData.append('action', 'uploadPhoto');
-                    formData.append('filename', cleanFilename);
-                    formData.append('mimeType', mimeType);
-                    formData.append('base64Data', base64Data);
-                    formData.append('metadata', JSON.stringify(metadata));
-                    formData.append('timestamp', new Date().toISOString());
-                    formData.append('source', 'dokumentasi-md-form');
-
-                    const postResponse = await fetch(APPS_SCRIPT_URL, {
+                    const response = await fetch(APPS_SCRIPT_URL, {
                         method: 'POST',
                         body: formData,
-                        mode: 'cors'
-                    });
-
-                    console.log('📁 [UPLOAD] POST FormData Response status:', postResponse.status);
-
-                    if (postResponse.ok) {
-                        const result = await postResponse.text();
-                        console.log('📁 [UPLOAD] POST FormData Success response:', result);
-                        
-                        // Check if response indicates success
-                        if (result.includes('success') || result.includes('uploaded')) {
-                            console.log('✅ [UPLOAD] Photo uploaded successfully via POST FormData');
-                            showSuccess('📁 Foto berhasil disimpan ke Google Drive!');
-                            return true;
-                        }
-                    }
-                } catch (postError) {
-                    console.log('📁 [UPLOAD] POST FormData method failed:', postError.message);
-                }
-
-                // METHOD 3: Simplified Notification (TIDAK KIRIM BASE64 VIA URL)
-                console.log('📁 [UPLOAD] Using simplified notification method...');
-                
-                const notificationParams = new URLSearchParams();
-                notificationParams.append('action', 'uploadPhoto');
-                notificationParams.append('filename', cleanFilename);
-                notificationParams.append('mimeType', mimeType);
-                notificationParams.append('fileSize', fileSizeKB + 'KB');
-                notificationParams.append('metadata', JSON.stringify(metadata));
-                notificationParams.append('timestamp', new Date().toISOString());
-                notificationParams.append('source', 'dokumentasi-md-notification');
-                notificationParams.append('_t', Date.now());
-
-                const notificationUrl = `${APPS_SCRIPT_URL}?${notificationParams.toString()}`;
-                
-                try {
-                    // Try fetch first
-                    const notificationResponse = await fetch(notificationUrl, {
-                        method: 'GET',
                         mode: 'no-cors'
                     });
-                    console.log('📁 [UPLOAD] Notification response type:', notificationResponse.type);
-                } catch (fetchError) {
-                    console.log('📁 [UPLOAD] Fetch notification failed, using image ping...');
-                    
-                    // Fallback to image ping
-                    const img = new Image();
-                    img.onload = () => {
-                        console.log('✅ [UPLOAD] Image ping notification completed successfully');
-                    };
-                    img.onerror = () => {
-                        console.log('📁 [UPLOAD] Image ping notification completed (error expected)');
-                    };
-                    img.src = notificationUrl;
+                    console.log('✅ POST FormData request sent');
+                } catch (postError) {
+                    console.log('⚠️ POST FormData error:', postError.message);
                 }
                 
-                console.log('✅ [UPLOAD] Photo upload notification sent successfully');
-                showSuccess('📁 Foto berhasil dikirim ke Google Drive!');
+                // METODE 2: GET dengan URLSearchParams (BACKUP)
+                console.log('📁 Mencoba upload dengan GET URLSearchParams...');
+                const params = new URLSearchParams();
+                params.append('action', 'uploadPhoto');
+                params.append('filename', cleanFilename);
+                params.append('mimeType', mimeType);
+                params.append('base64Data', base64Data.substring(0, 50000)); // Limit untuk GET
+                params.append('nama', metadata.nama);
+                params.append('branch', metadata.branch);
+                params.append('jobdesk', metadata.jobdesk);
+                params.append('type', metadata.type);
+                params.append('lokasi', metadata.lokasi);
+                params.append('tanggal', metadata.tanggal);
+                params.append('jam', metadata.jam);
+                params.append('timestamp', new Date().toISOString());
+                params.append('_t', Date.now());
+                
+                const getUrl = `${APPS_SCRIPT_URL}?${params.toString()}`;
+                
+                try {
+                    await fetch(getUrl, {
+                        method: 'GET',
+                        mode: 'no-cors',
+                        cache: 'no-cache'
+                    });
+                    console.log('✅ GET URLSearchParams request sent');
+                } catch (getError) {
+                    console.log('⚠️ GET URLSearchParams error:', getError.message);
+                }
+                
+                // METODE 3: Image pixel tracking (FALLBACK)
+                console.log('📁 Mencoba upload dengan Image pixel tracking...');
+                const img = new Image();
+                img.src = getUrl;
+                console.log('✅ Image pixel tracking initiated');
+                
+                console.log('📁 ========== UPLOAD SELESAI ==========');
+                console.log('📁 Semua metode upload telah dijalankan');
+                console.log('📁 Silakan cek Google Apps Script logs untuk detail');
+                
+                showSuccess('📁 Foto sedang diupload ke Google Drive...');
                 return true;
 
             } catch (error) {
-                console.error('❌ [UPLOAD] Critical error uploading photo:', error);
+                console.error('❌ Error uploading photo:', error);
                 showError('Gagal upload foto: ' + error.message);
                 return false;
             }
         }
-
         
-        // Fixed Jobdesk Data - SAMA SEPERTI SEBELUMNYA
+        // Fixed Jobdesk Data
         const FIXED_JOBDESK = [
             {
                 id: 1,
@@ -491,17 +445,14 @@ _Sistem Absensi MD - Borma Padalarang_`;
             }
         ];
         
-        // Cache untuk menyimpan data karyawan
+        // Cache dan state
         let registeredKaryawan = [];
         let isDataLoaded = false;
         let currentKaryawan = null;
         let completedJobdesk = JSON.parse(localStorage.getItem('completedJobdesk') || '{}');
-        
-        // Sistem tracking waktu login
         let currentLoginTime = null;
         let workDurationInterval = null;
         
-        // Session persistence keys
         const SESSION_KEYS = {
             KARYAWAN_SESSION: 'karyawan_session_active',
             KARYAWAN_DATA: 'current_karyawan_data',
@@ -518,14 +469,12 @@ _Sistem Absensi MD - Borma Padalarang_`;
         const branchText = document.getElementById('branchText');
         const logoutBtn = document.getElementById('logoutBtn');
         const jobdeskContainer = document.getElementById('jobdeskContainer');
-
-        // Modal elements
         const dokumentasiModal = document.getElementById('dokumentasiModal');
         const closeDokumentasiModal = document.getElementById('closeDokumentasiModal');
         const dokumentasiForm = document.getElementById('dokumentasiForm');
         const cancelDokBtn = document.getElementById('cancelDokBtn');
 
-        // 🔄 FUNGSI UNTUK MENGAMBIL DATA KARYAWAN DARI SHEET "Karyawan"
+        // 🔄 LOAD DATA KARYAWAN
         async function loadKaryawanDataFromSheets() {
             try {
                 console.log('🔄 Mencoba mengambil data karyawan dari Google Sheets...');
@@ -549,7 +498,6 @@ _Sistem Absensi MD - Borma Padalarang_`;
                     const rows = data.table.rows;
                     registeredKaryawan = [];
                     
-                    // Skip header row (index 0) dan mulai dari row 1
                     for (let i = 1; i < rows.length; i++) {
                         const row = rows[i];
                         
@@ -564,16 +512,15 @@ _Sistem Absensi MD - Borma Padalarang_`;
                     }
                     
                     isDataLoaded = true;
-                    console.log('✅ Data karyawan berhasil dimuat dari Sheet "Karyawan":', registeredKaryawan.length, 'records');
+                    console.log('✅ Data karyawan berhasil dimuat:', registeredKaryawan.length, 'records');
                     return true;
                 } else {
-                    throw new Error('Format data tidak valid dari Google Sheets');
+                    throw new Error('Format data tidak valid');
                 }
                 
             } catch (error) {
-                console.error('❌ Error loading data karyawan dari Google Sheets:', error);
+                console.error('❌ Error loading data karyawan:', error);
                 
-                // Enhanced fallback data
                 registeredKaryawan = [
                     { nama: "Ahmad Rizki Pratama", branch: "Jakarta Pusat" },
                     { nama: "Siti Nurhaliza Dewi", branch: "Jakarta Selatan" },
@@ -581,19 +528,83 @@ _Sistem Absensi MD - Borma Padalarang_`;
                     { nama: "Test User", branch: "Demo Branch" }
                 ];
                 isDataLoaded = true;
-                console.log('✅ Data fallback berhasil dimuat:', registeredKaryawan.length, 'records');
+                console.log('✅ Data fallback berhasil dimuat');
                 
                 return true;
             }
         }
 
-        // Session Management Functions
+        // 🌍 FUNGSI UNTUK MENDAPATKAN WAKTU REAL-TIME DARI SERVER
+        async function getServerTime() {
+            try {
+                console.log('🌍 Mengambil waktu real-time dari World Time API...');
+                
+                const response = await fetch(WORLD_TIME_API, {
+                    method: 'GET',
+                    cache: 'no-cache'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch server time');
+                }
+                
+                const data = await response.json();
+                const serverTime = new Date(data.datetime);
+                const deviceTime = new Date();
+                
+                // Hitung offset antara server time dan device time
+                serverTimeOffset = serverTime.getTime() - deviceTime.getTime();
+                lastServerSync = deviceTime.getTime();
+                
+                console.log('✅ Server time synchronized');
+                console.log('📅 Server time:', serverTime.toLocaleString('id-ID'));
+                console.log('📱 Device time:', deviceTime.toLocaleString('id-ID'));
+                console.log('⏱️ Time offset:', Math.round(serverTimeOffset / 1000), 'seconds');
+                
+                return serverTime;
+                
+            } catch (error) {
+                console.error('❌ Error getting server time:', error);
+                // Fallback ke waktu device jika gagal
+                console.log('⚠️ Using device time as fallback');
+                serverTimeOffset = 0;
+                return new Date();
+            }
+        }
+        
+        // 🕐 FUNGSI UNTUK MENDAPATKAN WAKTU SAAT INI (DARI SERVER)
+        function getCurrentTime() {
+            // Jika sudah pernah sync, gunakan offset untuk menghitung waktu server
+            if (lastServerSync !== null) {
+                const deviceNow = new Date();
+                const serverNow = new Date(deviceNow.getTime() + serverTimeOffset);
+                return serverNow;
+            }
+            
+            // Jika belum pernah sync, gunakan waktu device
+            return new Date();
+        }
+        
+        // 🔄 AUTO SYNC SERVER TIME SETIAP 5 MENIT
+        async function autoSyncServerTime() {
+            await getServerTime();
+            
+            // Sync ulang setiap 5 menit
+            setInterval(async () => {
+                console.log('🔄 Auto-syncing server time...');
+                await getServerTime();
+            }, 5 * 60 * 1000); // 5 menit
+        }
+
+        // Session lock functions REMOVED - login tanpa pembatasan device
+
+        // Session Management
         function saveKaryawanSession() {
             if (currentKaryawan && currentLoginTime) {
                 localStorage.setItem(SESSION_KEYS.KARYAWAN_SESSION, 'true');
                 localStorage.setItem(SESSION_KEYS.KARYAWAN_DATA, JSON.stringify(currentKaryawan));
                 localStorage.setItem(SESSION_KEYS.LOGIN_TIME, currentLoginTime.toISOString());
-                console.log('💾 Karyawan session saved to localStorage');
+                console.log('💾 Karyawan session saved');
             }
         }
         
@@ -601,7 +612,7 @@ _Sistem Absensi MD - Borma Padalarang_`;
             localStorage.removeItem(SESSION_KEYS.KARYAWAN_SESSION);
             localStorage.removeItem(SESSION_KEYS.KARYAWAN_DATA);
             localStorage.removeItem(SESSION_KEYS.LOGIN_TIME);
-            console.log('🗑️ Karyawan session cleared from localStorage');
+            console.log('🗑️ Karyawan session cleared');
         }
         
         function restoreKaryawanSession() {
@@ -616,18 +627,14 @@ _Sistem Absensi MD - Borma Padalarang_`;
                     
                     console.log('🔄 Restoring karyawan session:', currentKaryawan.nama);
                     
-                    // Update UI
                     welcomeText.textContent = `Selamat Datang, ${currentKaryawan.nama}`;
                     branchText.textContent = `Branch: ${currentKaryawan.branch}`;
                     
-                    // Start work duration tracking
                     workDurationInterval = setInterval(updateWorkDuration, 1000);
-                    updateWorkDuration(); // Update immediately
+                    updateWorkDuration();
                     
-                    // Display jobdesk
                     displayJobdesk();
                     
-                    // Show dashboard
                     loginPage.classList.add('hidden');
                     thankYouPage.classList.add('hidden');
                     dashboardPage.classList.remove('hidden');
@@ -642,7 +649,7 @@ _Sistem Absensi MD - Borma Padalarang_`;
             return false;
         }
 
-        // 🔍 FUNGSI UNTUK VERIFIKASI DATA KARYAWAN
+        // 🔍 VERIFIKASI KARYAWAN
         function verifyKaryawanData(nama, branch) {
             console.log('🔍 Memverifikasi data karyawan...');
             
@@ -658,37 +665,35 @@ _Sistem Absensi MD - Borma Padalarang_`;
             });
             
             if (karyawanFound) {
-                console.log('✅ VERIFIKASI BERHASIL! Karyawan ditemukan:', karyawanFound);
+                console.log('✅ VERIFIKASI BERHASIL!');
             } else {
-                console.log('❌ VERIFIKASI GAGAL! Karyawan tidak ditemukan dalam database');
+                console.log('❌ VERIFIKASI GAGAL!');
             }
             
             return karyawanFound;
         }
 
-        // Fungsi untuk memulai tracking waktu kerja
-        function startWorkDurationTracking() {
-            currentLoginTime = new Date();
+        // Work Duration Tracking
+        async function startWorkDurationTracking() {
+            // Gunakan waktu server untuk login
+            currentLoginTime = getCurrentTime();
             
-            console.log('⏰ Memulai tracking waktu kerja untuk:', currentKaryawan.nama);
+            console.log('⏰ Memulai tracking waktu kerja');
+            console.log('📅 Login time (server):', currentLoginTime.toLocaleString('id-ID'));
             
-            // Save session to localStorage
             saveKaryawanSession();
+            await saveAttendanceToSheets('login');
             
-            // Save attendance to Google Sheets IMMEDIATELY
-            saveAttendanceToSheets('login');
-            
-            // Start interval untuk update durasi real-time
             workDurationInterval = setInterval(updateWorkDuration, 1000);
             
-            console.log('✅ Tracking waktu kerja dimulai untuk:', currentKaryawan.nama);
+            console.log('✅ Tracking waktu kerja dimulai');
         }
         
-        // Fungsi untuk menghitung dan menampilkan durasi kerja
         function updateWorkDuration() {
             if (!currentLoginTime) return;
             
-            const now = new Date();
+            // Gunakan waktu server untuk menghitung durasi
+            const now = getCurrentTime();
             const duration = now - currentLoginTime;
             
             const hours = Math.floor(duration / (1000 * 60 * 60));
@@ -698,7 +703,6 @@ _Sistem Absensi MD - Borma Padalarang_`;
             const durationText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
             const durationReadable = formatDurationReadable(hours, minutes, seconds);
             
-            // Update display
             const durationElement = document.getElementById('workDuration');
             const durationTextElement = document.getElementById('workDurationText');
             
@@ -711,7 +715,6 @@ _Sistem Absensi MD - Borma Padalarang_`;
             }
         }
         
-        // Fungsi untuk format durasi yang mudah dibaca
         function formatDurationReadable(hours, minutes, seconds) {
             const parts = [];
             
@@ -728,62 +731,53 @@ _Sistem Absensi MD - Borma Padalarang_`;
             return parts.join(' ');
         }
         
-        // Fungsi untuk menghentikan tracking waktu kerja
-        function stopWorkDurationTracking() {
+        async function stopWorkDurationTracking() {
             if (workDurationInterval) {
                 clearInterval(workDurationInterval);
                 workDurationInterval = null;
             }
             
             if (currentLoginTime && currentKaryawan) {
-                console.log('⏰ Menghentikan tracking waktu kerja untuk:', currentKaryawan.nama);
+                console.log('⏰ Menghentikan tracking waktu kerja');
                 
-                const now = new Date();
+                // Gunakan waktu server untuk logout
+                const now = getCurrentTime();
                 const workDuration = now - currentLoginTime;
                 const durationText = formatDuration(workDuration);
                 
-                // Save logout attendance to Google Sheets IMMEDIATELY with duration
-                saveAttendanceToSheets('logout', durationText);
+                console.log('📅 Logout time (server):', now.toLocaleString('id-ID'));
+                console.log('⏱️ Work duration:', durationText);
                 
-                // 🔄 RESET STATUS DOKUMENTASI SAAT LOGOUT
+                await saveAttendanceToSheets('logout', durationText);
                 resetDokumentasiStatus();
-                
-                // Clear karyawan session from localStorage
                 clearKaryawanSession();
-                
-                // Show thank you page with work duration
                 showThankYouPage(durationText);
                 
-                console.log('✅ Tracking waktu kerja dihentikan untuk:', currentKaryawan.nama);
+                console.log('✅ Tracking waktu kerja dihentikan');
             }
             
             currentLoginTime = null;
         }
         
-        // 🔄 FUNGSI UNTUK RESET STATUS DOKUMENTASI SETIAP LOGOUT
         function resetDokumentasiStatus() {
             if (!currentKaryawan) return;
             
             const today = new Date().toLocaleDateString('id-ID');
             const karyawanKey = `${currentKaryawan.nama}_${currentKaryawan.branch}_${today}`;
             
-            // Hapus semua status dokumentasi untuk karyawan hari ini
             if (completedJobdesk[karyawanKey]) {
                 delete completedJobdesk[karyawanKey];
                 localStorage.setItem('completedJobdesk', JSON.stringify(completedJobdesk));
-                console.log('🔄 Status dokumentasi direset untuk:', currentKaryawan.nama);
+                console.log('🔄 Status dokumentasi direset');
             }
         }
         
-        // Fungsi untuk menampilkan halaman terima kasih
         function showThankYouPage(workDuration) {
             console.log('🎉 Menampilkan halaman terima kasih...');
             
-            // Update informasi di halaman terima kasih
             document.getElementById('thankYouNama').textContent = currentKaryawan.nama;
             document.getElementById('thankYouBranch').textContent = currentKaryawan.branch;
             
-            // Format tanggal hari ini dalam bahasa Indonesia
             const today = new Date();
             const options = { 
                 weekday: 'long', 
@@ -794,22 +788,18 @@ _Sistem Absensi MD - Borma Padalarang_`;
             const formattedDate = today.toLocaleDateString('id-ID', options);
             document.getElementById('thankYouTanggal').textContent = formattedDate;
             
-            // Tampilkan durasi kerja dengan format yang elegan
             document.getElementById('thankYouDurasi').textContent = workDuration;
             
-            // Parse durasi untuk format yang mudah dibaca
             const [hours, minutes, seconds] = workDuration.split(':').map(Number);
             const readableDuration = formatDurationReadable(hours, minutes, seconds);
             document.getElementById('thankYouDurasiText').textContent = readableDuration;
             
-            // Sembunyikan dashboard dan tampilkan halaman terima kasih
             dashboardPage.classList.add('hidden');
             thankYouPage.classList.remove('hidden');
             
-            console.log('✅ Halaman terima kasih ditampilkan dengan durasi:', workDuration);
+            console.log('✅ Halaman terima kasih ditampilkan');
         }
         
-        // Fungsi untuk format durasi dalam jam:menit:detik
         function formatDuration(milliseconds) {
             const hours = Math.floor(milliseconds / (1000 * 60 * 60));
             const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
@@ -818,7 +808,7 @@ _Sistem Absensi MD - Borma Padalarang_`;
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
-        // Fungsi untuk menampilkan jobdesk
+        // Display Jobdesk
         function displayJobdesk() {
             const today = new Date().toLocaleDateString('id-ID');
             const karyawanKey = `${currentKaryawan.nama}_${currentKaryawan.branch}_${today}`;
@@ -873,7 +863,6 @@ _Sistem Absensi MD - Borma Padalarang_`;
             });
         }
 
-        // Fungsi untuk toggle jobdesk completion
         function toggleJobdesk(jobdeskId) {
             const checkbox = document.getElementById(`task${jobdeskId}`);
             const today = new Date().toLocaleDateString('id-ID');
@@ -884,24 +873,20 @@ _Sistem Absensi MD - Borma Padalarang_`;
             }
             
             if (checkbox.checked) {
-                // Jika dicentang, buka modal dokumentasi
                 openDokumentasiModal(jobdeskId, FIXED_JOBDESK.find(j => j.id === jobdeskId).title);
-                checkbox.checked = false; // Reset checkbox sampai dokumentasi selesai
+                checkbox.checked = false;
             } else {
-                // Jika di-uncheck, hapus dari completed
                 delete completedJobdesk[karyawanKey][jobdeskId];
                 localStorage.setItem('completedJobdesk', JSON.stringify(completedJobdesk));
                 displayJobdesk();
             }
         }
 
-        // Fungsi untuk membuka modal dokumentasi
         function openDokumentasiModal(jobdeskId, jobdeskTitle) {
             document.getElementById('jobdeskId').value = jobdeskId;
             document.getElementById('jobdeskTitle').value = jobdeskTitle;
             document.getElementById('modalTitle').textContent = `Dokumentasi: ${jobdeskTitle}`;
             
-            // Reset form
             dokumentasiForm.reset();
             document.getElementById('previewBefore').classList.add('hidden');
             document.getElementById('previewAfter').classList.add('hidden');
@@ -909,12 +894,13 @@ _Sistem Absensi MD - Borma Padalarang_`;
             dokumentasiModal.classList.remove('hidden');
         }
 
-        // 📊 FUNGSI UNTUK MENYIMPAN ABSENSI KE SHEET "Absensi"
+        // 📊 SAVE ATTENDANCE
         async function saveAttendanceToSheets(type, workDuration = null) {
             try {
-                console.log(`🔄 Menyimpan absensi ${type} ke Google Sheets...`);
+                console.log(`🔄 Menyimpan absensi ${type}...`);
                 
-                const now = new Date();
+                // Gunakan waktu server untuk absensi
+                const now = getCurrentTime();
                 const durasi = workDuration || (currentLoginTime && type === 'logout' ? 
                     formatDuration(now - currentLoginTime) : '-');
                 
@@ -931,9 +917,6 @@ _Sistem Absensi MD - Borma Padalarang_`;
                     source: 'single-request'
                 };
                 
-                console.log('📤 Data absensi yang akan dikirim:', attendanceData);
-                
-                // SINGLE REQUEST METHOD
                 const params = new URLSearchParams();
                 Object.keys(attendanceData).forEach(key => {
                     params.append(key, attendanceData[key]);
@@ -942,26 +925,18 @@ _Sistem Absensi MD - Borma Padalarang_`;
                 
                 const requestUrl = `${APPS_SCRIPT_URL}?${params.toString()}`;
                 
-                // Use single fetch request
                 try {
-                    const response = await fetch(requestUrl, {
+                    await fetch(requestUrl, {
                         method: 'GET',
                         mode: 'no-cors',
                         cache: 'no-cache',
                         credentials: 'omit'
                     });
                     
-                    console.log('📡 Single request response:', response.type);
                     showSuccess(`✅ ${type === 'login' ? 'Login' : 'Logout'} berhasil dicatat!`);
                     return true;
                 } catch (fetchError) {
-                    console.log('📡 Fetch error (normal for no-cors):', fetchError.message);
-                    
-                    // Fallback: Single image ping
                     const img = new Image();
-                    img.onload = img.onerror = () => {
-                        console.log('📡 Fallback image ping completed');
-                    };
                     img.src = requestUrl;
                     
                     showSuccess(`✅ ${type === 'login' ? 'Login' : 'Logout'} berhasil dicatat!`);
@@ -975,18 +950,20 @@ _Sistem Absensi MD - Borma Padalarang_`;
             }
         }
 
-        // Fungsi untuk menyimpan dokumentasi ke Google Sheets
+        // SAVE DOKUMENTASI
         async function saveDokumentasiToSheets(dokumentasiData) {
-            console.log('🔄 Mencoba menyimpan dokumentasi ke Google Sheets...');
+            console.log('🔄 Menyimpan dokumentasi...');
             
             try {
-                // SINGLE REQUEST METHOD
+                // Gunakan waktu server untuk dokumentasi
+                const now = getCurrentTime();
+                
                 const params = new URLSearchParams();
                 params.append('action', 'saveDokumentasi');
                 params.append('nama', dokumentasiData.nama);
                 params.append('branch', dokumentasiData.branch);
-                params.append('tanggal', dokumentasiData.tanggal);
-                params.append('jam', dokumentasiData.jam);
+                params.append('tanggal', now.toLocaleDateString('id-ID'));
+                params.append('jam', now.toLocaleTimeString('id-ID'));
                 params.append('jobdeskId', dokumentasiData.jobdeskId);
                 params.append('jobdeskTitle', dokumentasiData.jobdeskTitle);
                 params.append('komentar', dokumentasiData.komentar.substring(0, 500));
@@ -999,37 +976,28 @@ _Sistem Absensi MD - Borma Padalarang_`;
                 
                 const requestUrl = `${APPS_SCRIPT_URL}?${params.toString()}`;
                 
-                // Use single fetch request
                 try {
-                    const response = await fetch(requestUrl, {
+                    await fetch(requestUrl, {
                         method: 'GET',
                         mode: 'no-cors',
                         cache: 'no-cache',
                         credentials: 'omit'
                     });
                     
-                    console.log('📡 Dokumentasi single request response:', response.type);
                     return true;
                 } catch (fetchError) {
-                    console.log('📡 Dokumentasi fetch error, trying image ping:', fetchError.message);
-                    
-                    // Fallback: Single image ping
                     const img = new Image();
-                    img.onload = img.onerror = () => {
-                        console.log('📡 Dokumentasi fallback image ping completed');
-                    };
                     img.src = requestUrl;
                     
                     return true;
                 }
                 
             } catch (error) {
-                console.error('❌ Gagal menyimpan dokumentasi ke Google Sheets:', error.message);
-                return true; // Always return true to not block the UI
+                console.error('❌ Gagal menyimpan dokumentasi:', error.message);
+                return true;
             }
         }
 
-        // Fungsi untuk mengatur loading state dokumentasi
         function setDokumentasiLoadingState(isLoading) {
             const submitText = document.getElementById('submitDokText');
             const submitLoading = document.getElementById('submitDokLoading');
@@ -1046,11 +1014,9 @@ _Sistem Absensi MD - Borma Padalarang_`;
             }
         }
 
-        // Fungsi untuk menampilkan pesan sukses
         function showSuccess(message) {
             console.log('✅ Showing success:', message);
             
-            // Create success notification
             const successDiv = document.createElement('div');
             successDiv.className = 'notification bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg slide-up';
             successDiv.innerHTML = `
@@ -1068,11 +1034,9 @@ _Sistem Absensi MD - Borma Padalarang_`;
             }, 3000);
         }
 
-        // Fungsi untuk menampilkan pesan error
         function showError(message) {
             console.log('❌ Showing error:', message);
             
-            // Create error notification
             const errorDiv = document.createElement('div');
             errorDiv.className = 'notification bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg slide-up';
             errorDiv.innerHTML = `
@@ -1090,7 +1054,6 @@ _Sistem Absensi MD - Borma Padalarang_`;
             }, 5000);
         }
 
-        // Fungsi untuk mengatur loading state
         function setLoadingState(isLoading) {
             const submitBtn = document.getElementById('submitBtn');
             const submitText = document.getElementById('submitText');
@@ -1107,28 +1070,27 @@ _Sistem Absensi MD - Borma Padalarang_`;
             }
         }
 
-        // Load data saat halaman dimuat
+        // LOAD PAGE
         window.addEventListener('load', async function() {
-            console.log('🚀 Halaman dimuat, memulai inisialisasi...');
+            console.log('🚀 Halaman dimuat...');
             
-            // Check for existing sessions FIRST
-            console.log('🔍 Checking for existing sessions...');
+            // Sinkronisasi waktu server terlebih dahulu
+            console.log('🌍 Inisialisasi sinkronisasi waktu server...');
+            await autoSyncServerTime();
             
-            // Try to restore karyawan session
             if (restoreKaryawanSession()) {
-                console.log('✅ Karyawan session restored, continuing with background tasks');
+                console.log('✅ Karyawan session restored');
             } else {
-                console.log('ℹ️ No active sessions found, showing login page');
+                console.log('ℹ️ No active sessions');
                 loginPage.classList.remove('hidden');
                 dashboardPage.classList.add('hidden');
                 thankYouPage.classList.add('hidden');
             }
             
-            // Load karyawan data
             await loadKaryawanDataFromSheets();
         });
 
-        // Handle form submission - ENHANCED WITH AUTO WHATSAPP
+        // FORM SUBMIT - DENGAN SESSION LOCK YANG DIPERBAIKI
         absenForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -1149,32 +1111,32 @@ _Sistem Absensi MD - Borma Padalarang_`;
                 
                 const karyawanFound = verifyKaryawanData(nama, branch);
                 
-                if (karyawanFound) {
-                    currentKaryawan = karyawanFound;
-                    welcomeText.textContent = `Selamat Datang, ${karyawanFound.nama}`;
-                    branchText.textContent = `Branch: ${karyawanFound.branch}`;
-                    
-                    sessionStorage.setItem('currentKaryawan', JSON.stringify(karyawanFound));
-                    
-                    // Start tracking waktu kerja
-                    startWorkDurationTracking();
-                    
-                    // 📱 KIRIM WHATSAPP OTOMATIS SAAT LOGIN
-                    sendWhatsAppNotification('login', {
-                        nama: karyawanFound.nama,
-                        branch: karyawanFound.branch
-                    });
-                    
-                    displayJobdesk();
-                    
-                    loginPage.classList.add('hidden');
-                    dashboardPage.classList.remove('hidden');
-                    errorMessage.classList.add('hidden');
-                    
-                } else {
+                if (!karyawanFound) {
                     showError('Data tidak ditemukan! Silahkan hubungi admin untuk mendaftarkan akun Anda.');
                     errorMessage.classList.remove('hidden');
+                    setLoadingState(false);
+                    return;
                 }
+                
+                currentKaryawan = karyawanFound;
+                welcomeText.textContent = `Selamat Datang, ${karyawanFound.nama}`;
+                branchText.textContent = `Branch: ${karyawanFound.branch}`;
+                
+                sessionStorage.setItem('currentKaryawan', JSON.stringify(karyawanFound));
+                
+                await startWorkDurationTracking();
+                
+                await sendWhatsAppNotification('login', {
+                    nama: karyawanFound.nama,
+                    branch: karyawanFound.branch
+                });
+                
+                displayJobdesk();
+                
+                loginPage.classList.add('hidden');
+                dashboardPage.classList.remove('hidden');
+                errorMessage.classList.add('hidden');
+                
             } catch (error) {
                 console.error('❌ Error saat verifikasi:', error);
                 showError('Terjadi kesalahan. Silakan coba lagi!');
@@ -1183,32 +1145,32 @@ _Sistem Absensi MD - Borma Padalarang_`;
             }
         });
 
-        // Handle logout - DENGAN AUTO WHATSAPP
-        logoutBtn.addEventListener('click', function() {
-            // 📱 KIRIM WHATSAPP OTOMATIS SAAT LOGOUT DENGAN DURASI
+        // LOGOUT
+        logoutBtn.addEventListener('click', async function() {
+            console.log('🔴 Logout button clicked');
+            
             if (currentKaryawan && currentLoginTime) {
-                const now = new Date();
+                // Gunakan waktu server untuk logout
+                const now = getCurrentTime();
                 const workDuration = now - currentLoginTime;
                 const durationText = formatDuration(workDuration);
                 
-                sendWhatsAppNotification('logout', {
+                await sendWhatsAppNotification('logout', {
                     nama: currentKaryawan.nama,
                     branch: currentKaryawan.branch,
                     durasi: durationText
                 });
             }
             
-            // Stop tracking waktu kerja (ini akan menampilkan halaman terima kasih)
-            stopWorkDurationTracking();
+            await stopWorkDurationTracking();
             
-            // Reset session data
             sessionStorage.removeItem('currentKaryawan');
             absenForm.reset();
             errorMessage.classList.add('hidden');
             currentKaryawan = null;
         });
 
-        // Handle dokumentasi modal
+        // MODAL HANDLERS
         closeDokumentasiModal.addEventListener('click', function() {
             dokumentasiModal.classList.add('hidden');
         });
@@ -1223,7 +1185,7 @@ _Sistem Absensi MD - Borma Padalarang_`;
             }
         });
 
-        // Handle file preview
+        // FILE PREVIEW
         document.getElementById('fotoBefore').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -1248,7 +1210,7 @@ _Sistem Absensi MD - Borma Padalarang_`;
             }
         });
 
-        // Handle dokumentasi form submission - DIPERBAIKI TOTAL
+        // DOKUMENTASI FORM SUBMIT
         dokumentasiForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -1269,44 +1231,39 @@ _Sistem Absensi MD - Borma Padalarang_`;
             setDokumentasiLoadingState(true);
             
             try {
-                // Convert images to base64
                 let fotoBeforeData = null;
                 let fotoAfterData = null;
                 
                 if (fotoBefore) {
                     fotoBeforeData = await fileToBase64(fotoBefore);
-                    console.log('📁 [FORM] Before photo converted to base64, size:', Math.round(fotoBeforeData.length * 0.75 / 1024), 'KB');
                 }
                 
                 if (fotoAfter) {
                     fotoAfterData = await fileToBase64(fotoAfter);
-                    console.log('📁 [FORM] After photo converted to base64, size:', Math.round(fotoAfterData.length * 0.75 / 1024), 'KB');
                 }
+                
+                // Gunakan waktu server untuk dokumentasi
+                const now = getCurrentTime();
                 
                 const dokumentasiData = {
                     nama: currentKaryawan.nama,
                     branch: currentKaryawan.branch,
-                    tanggal: new Date().toLocaleDateString('id-ID'),
-                    jam: new Date().toLocaleTimeString('id-ID'),
+                    tanggal: now.toLocaleDateString('id-ID'),
+                    jam: now.toLocaleTimeString('id-ID'),
                     jobdeskId: jobdeskId,
                     jobdeskTitle: jobdeskTitle,
                     komentar: komentar,
                     lokasi: lokasi,
                     fotoBefore: fotoBeforeData,
                     fotoAfter: fotoAfterData,
-                    timestamp: new Date().toISOString()
+                    timestamp: now.toISOString()
                 };
                 
-                console.log('📤 Mengirim dokumentasi ke Apps Script...');
-                
-                // Try to save to Google Sheets
                 await saveDokumentasiToSheets(dokumentasiData);
                 
-                // 📁 UPLOAD FOTO KE GOOGLE DRIVE JIKA ADA
                 let uploadSuccess = true;
                 
                 if (fotoBefore) {
-                    console.log('📁 [FORM] Uploading BEFORE photo to Google Drive...');
                     const beforeFilename = `${currentKaryawan.nama}_${jobdeskTitle}_BEFORE_${Date.now()}.jpg`;
                     const beforeMetadata = {
                         nama: currentKaryawan.nama,
@@ -1314,19 +1271,17 @@ _Sistem Absensi MD - Borma Padalarang_`;
                         jobdesk: jobdeskTitle,
                         type: 'BEFORE',
                         lokasi: lokasi,
-                        tanggal: new Date().toLocaleDateString('id-ID'),
-                        jam: new Date().toLocaleTimeString('id-ID')
+                        tanggal: now.toLocaleDateString('id-ID'),
+                        jam: now.toLocaleTimeString('id-ID')
                     };
                     
                     const beforeUpload = await uploadPhotoToGoogleDrive(fotoBeforeData, beforeFilename, beforeMetadata);
                     if (!beforeUpload) {
-                        console.log('⚠️ [FORM] Before photo upload failed, but continuing...');
                         uploadSuccess = false;
                     }
                 }
                 
                 if (fotoAfter) {
-                    console.log('📁 [FORM] Uploading AFTER photo to Google Drive...');
                     const afterFilename = `${currentKaryawan.nama}_${jobdeskTitle}_AFTER_${Date.now()}.jpg`;
                     const afterMetadata = {
                         nama: currentKaryawan.nama,
@@ -1334,21 +1289,16 @@ _Sistem Absensi MD - Borma Padalarang_`;
                         jobdesk: jobdeskTitle,
                         type: 'AFTER',
                         lokasi: lokasi,
-                        tanggal: new Date().toLocaleDateString('id-ID'),
-                        jam: new Date().toLocaleTimeString('id-ID')
+                        tanggal: now.toLocaleDateString('id-ID'),
+                        jam: now.toLocaleTimeString('id-ID')
                     };
                     
                     const afterUpload = await uploadPhotoToGoogleDrive(fotoAfterData, afterFilename, afterMetadata);
                     if (!afterUpload) {
-                        console.log('⚠️ [FORM] After photo upload failed, but continuing...');
                         uploadSuccess = false;
                     }
                 }
 
-                // Dokumentasi berhasil disimpan (tanpa auto-report WhatsApp)
-                console.log('✅ [FORM] Dokumentasi berhasil disimpan');
-                
-                // Mark jobdesk as completed
                 const today = new Date().toLocaleDateString('id-ID');
                 const karyawanKey = `${currentKaryawan.nama}_${currentKaryawan.branch}_${today}`;
                 
@@ -1359,16 +1309,13 @@ _Sistem Absensi MD - Borma Padalarang_`;
                 completedJobdesk[karyawanKey][jobdeskId] = true;
                 localStorage.setItem('completedJobdesk', JSON.stringify(completedJobdesk));
                 
-                // Update session data to persist completed jobdesk
                 saveKaryawanSession();
                 
-                // Auto-check the checkbox
                 const checkbox = document.getElementById(`task${jobdeskId}`);
                 if (checkbox) {
                     checkbox.checked = true;
                 }
                 
-                // Close modal and refresh display
                 dokumentasiModal.classList.add('hidden');
                 displayJobdesk();
                 
@@ -1379,14 +1326,13 @@ _Sistem Absensi MD - Borma Padalarang_`;
                 showSuccess(successMessage);
                 
             } catch (error) {
-                console.error('❌ [FORM] Error processing dokumentasi:', error);
+                console.error('❌ Error processing dokumentasi:', error);
                 showError('Gagal memproses dokumentasi: ' + error.message);
             } finally {
                 setDokumentasiLoadingState(false);
             }
         });
 
-        // Helper function to convert file to base64
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1396,26 +1342,23 @@ _Sistem Absensi MD - Borma Padalarang_`;
             });
         }
 
-        // Handle back to login button dari halaman terima kasih
+        // BACK TO LOGIN
         document.getElementById('backToLoginBtn').addEventListener('click', function() {
             thankYouPage.classList.add('hidden');
             loginPage.classList.remove('hidden');
             
-            // Reset form dan state
             absenForm.reset();
             errorMessage.classList.add('hidden');
             
-            // Reset current karyawan data
             currentKaryawan = null;
             currentLoginTime = null;
             
             showSuccess('✅ Siap untuk login karyawan berikutnya!');
         });
 
-        // Make functions global for onclick handlers
+        // GLOBAL FUNCTIONS
         window.toggleJobdesk = toggleJobdesk;
         window.openDokumentasiModal = openDokumentasiModal;
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99a440f0243a7a21',t:'MTc2MjQyODU3Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a774a3735b4ce39',t:'MTc2NDY0MTQ0Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
-
